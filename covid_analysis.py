@@ -4,17 +4,17 @@ Created on Wed Jul  8 20:40:42 2020
 
 @author: manjgom  
          birr.data@gmail.com
-         
-         Work modified and expanded from Coursera 
-         Covid19 Data Analysis using Python course
-         by Ahmad Varasteh
-         
+             
 """
 
 import pandas as pd
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
+from dictionaries import states
+
+
+print(states)
 
 def look():
     print(covid_data.head())
