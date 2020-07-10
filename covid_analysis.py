@@ -12,6 +12,7 @@ import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 from dictionaries import states
+from funcs import sized_text
 
 #global vars
 policies_list = []
@@ -23,15 +24,10 @@ def look():
     print(policy_data.head())
     print(policy_data.shape)
     
-
-
-  
-    
-    
 def data_load():
     #import data and clean up
     covid_data = pd.read_csv('data/COVID Tracking - Historical.csv')
-    policy_data = pd.read_csv('data/Policy - Univ of Washington.csv')
+    policy_data = pd.read_csv('data/Policy - Univ of Washington.csv') 
     
     covid_data.drop('DATA_SOURCE_NAME',axis=1,inplace=True)
     covid_data.set_index('PROVINCE_STATE_CODE',inplace=True)
@@ -40,42 +36,29 @@ def data_load():
                      'PROVINCE_STATE_FIPS_NUMBER', 'PROVINCE_STATE_NAME'],
                      axis=1, inplace=True)
     
-    # get distinct policies from table and create dictionary for menu selection
+    # get distinct policies from table and create sorted dictionary for menu selection
     policies_list = policy_data['POLICY_NAME'].unique()
     policies_list.sort()
    
-    for i in range (1, len(policies_list)+1):
-        policies[i] = policies_list[i-1]
+    for i in range (0, len(policies_list)-1):
+        #sized_text function for even column spacing        
+        policies[i] = sized_text(policies_list[i])
         
-    print(policies)
-    
+         
 def interface():
 
     print("-----------    Covid-19 Policy analysis tool   ----------------") 
     print("- This utility facilitates analysis of government policy") 
     print("- effects on Covid-19 cases.\n")
-    print("- Select Restriction(s): ")
+    print("-  Select Restriction(s): \n")
     
-    
-    item_count = (len(policies))
-    menu_row_count = int(item_count/3)
-    menu_row_remainder = item_count%3
-    print (menu_row_count)
-    for r in range(1, menu_row_count + 1):
-        #print (policies)
-        print ("-  {}- {}  {}- {}  {}- {} \n".format(r, policies.get(r), 
-                r + menu_row_count, policies.get(r + menu_row_count), 
-                r + (menu_row_count * 2),policies.get(r + (menu_row_count * 2)))) 
-        
-    
-    if menu_row_remainder == 1:
-        print ("-                {}- {} \n".format(item_count, policies.get(item_count))) 
-        
-        
-    elif menu_row_remainder == 2:
-       print ("-   {}- {}         {}- {} \n".format(item_count - 1 , policies.get(tem_count  - 1),
-                                                    tem_count  , policies.get(tem_count )))
-        
+    row_count = int((len(policies)/3)) #diplay 3 columns
+    for r in range(0, row_count + 1):
+       print ("-  {}- {}  {}- {}  {}- {} ".format(r, policies.get(r), 
+               r + row_count, policies.get(r + row_count), 
+               r + (row_count * 2),policies.get(r + (row_count * 2)))) 
+       
+    sel = input("Enter a number or series of numbers separated by commas:")
                     
 data_load()
 interface()       
