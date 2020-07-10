@@ -16,7 +16,8 @@ from funcs import sized_text
 
 #global vars
 policies_list = []
-policies = {}  
+policies = {} 
+program_run = True 
 
 def look():
     print(covid_data.head())
@@ -46,7 +47,7 @@ def data_load():
         
          
 def interface():
-
+    
     print("-----------    Covid-19 Policy analysis tool   ----------------") 
     print("- This utility facilitates analysis of government policy") 
     print("- effects on Covid-19 cases.\n")
@@ -57,8 +58,23 @@ def interface():
        print ("-  {}- {}  {}- {}  {}- {} ".format(r, policies.get(r), 
                r + row_count, policies.get(r + row_count), 
                r + (row_count * 2),policies.get(r + (row_count * 2)))) 
-       
-    sel = input("Enter a number or series of numbers separated by commas:")
+    valid_entry = False   
+    while valid_entry == False:   
+        sel = input("Enter a number or series of numbers separated by commas: ")
+        for char in sel:
+            if char.isdigit() == True:
+                valid_entry = True
+            elif char == " ":
+                valid_entry = True
+            elif char == ',':
+                valid_entry = True
+            else:
+                valid_entry = False
+                break
                     
 data_load()
-interface()       
+while program_run:
+    interface()
+    ext = input("Press any key to run another analysis, or [q]uit: ")
+    if ext.lower() == "q":
+        program_run = False
