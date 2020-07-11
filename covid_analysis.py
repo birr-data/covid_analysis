@@ -20,44 +20,46 @@ policies = {}
 
 program_run = True 
 
+
+# ----------------------------------------remove after debug
+pd.options.display.max_columns = None
+pd.options.display.max_rows = None
+#______________________________________________
+#import data and clean up
+covid_data = pd.read_csv('data/COVID Tracking - Historical.csv')
+policy_data = pd.read_csv('data/Policy - Univ of Washington.csv') 
+
+covid_data.drop('DATA_SOURCE_NAME',axis=1,inplace=True)
+#covid_data.set_index('state',inplace=True)
+
+policy_data.drop(['GLOBAL_BURDEN_DISEASE_IDENTIFIER',
+                 'PROVINCE_STATE_FIPS_NUMBER', 'PROVINCE_STATE_NAME'],
+                 axis=1, inplace=True)
+
+# get distinct policies from table and create sorted dictionary for menu selection
+policies_list = policy_data['POLICY_NAME'].unique()
+policies_list.sort()
+   
+for i in range (0, len(policies_list)-1):
+    #sized_text function for even column spacing        
+    policies[i] = sized_text(policies_list[i])
+    
+
+        
+
 def look():
     print(covid_data.head())
     print(covid_data.shape)
     print(policy_data.head())
-    print(policy_data.shape)
-    
-def data_load():
-    #import data and clean up
-    covid_data = pd.read_csv('data/COVID Tracking - Historical.csv')
-    policy_data = pd.read_csv('data/Policy - Univ of Washington.csv') 
-    
-    covid_data.drop('DATA_SOURCE_NAME',axis=1,inplace=True)
-    covid_data.set_index('PROVINCE_STATE_CODE',inplace=True)
-    
-    policy_data.drop(['GLOBAL_BURDEN_DISEASE_IDENTIFIER',
-                     'PROVINCE_STATE_FIPS_NUMBER', 'PROVINCE_STATE_NAME'],
-                     axis=1, inplace=True)
-    
-    # get distinct policies from table and create sorted dictionary for menu selection
-    policies_list = policy_data['POLICY_NAME'].unique()
-    policies_list.sort()
-   
-    for i in range (0, len(policies_list)-1):
-        #sized_text function for even column spacing        
-        policies[i] = sized_text(policies_list[i])
-        
-        
-        
-        
+    print(policy_data.shape)        
          
 def interface():
     
     print("-----------    Covid-19 Policy analysis tool   ----------------") 
     print("- This utility facilitates analysis of government policy") 
     print("- effects on Covid-19 cases.\n")
-    print("-  Select Restriction(s): \n")
-    
-    print("""\n
+    print("-  Select State: ")
+    print("""
     - AK: Alaska           AL: Alabama         AR: Arkansas       AS: American Samoa
     - AZ: Arizona          CA: California      CO: Colorado       CT: Connecticut  
     - DC: Dist of Colum    DE: Delaware        FL: Florida        GA: Georgia             
@@ -74,10 +76,21 @@ def interface():
     - VT: Vermont          WA: Washington      WI: Wisconsin      WV: West Virginia
     - WY: Wyoming""")
     
-    
-    
-    
-    
+    valid_entry = False   
+    while valid_entry == False:   
+        state_selected = input("Enter State code (not case sensitive): ").upper()
+        if (isinstance(state_selected, str) and (len(state_selected) == 2)):
+            valid_entry = True
+        else:
+            print("Invalid entry, please try again.\n")
+            
+    print(state_selected)
+      
+    covid_state_data = covid_data.loc[covid_data['state'] == state_selected]
+   
+    covid_state_data.to_csv('filtered by state.csv')    
+   
+    print(covid_state_data.shape)
     
     
     
@@ -98,9 +111,12 @@ def interface():
                 valid_entry = True
             else:
                 valid_entry = False
+                print("Invalid entry, please try again.\n")
                 break
-                    
-data_load()
+    print (sel)
+
+               
+
 while program_run:
     interface()
     ext = input("Press any key to run another analysis, or [q]uit: ")
