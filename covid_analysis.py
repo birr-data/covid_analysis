@@ -30,12 +30,7 @@ pd.options.display.max_rows = None
 covid_data = pd.read_csv('data/COVID Tracking - Historical.csv')
 policy_data = pd.read_csv('data/Policy - Univ of Washington.csv') 
 
-
-#covid_data.set_index("REPORT_DATE", inplace=True, drop=True)
 covid_data.drop('DATA_SOURCE_NAME',axis=1,inplace=True)
-covid_data.head()
-
-
 policy_data.drop(['GLOBAL_BURDEN_DISEASE_IDENTIFIER',
                  'PROVINCE_STATE_FIPS_NUMBER', 'PROVINCE_STATE_NAME'],
                  axis=1, inplace=True)
@@ -87,28 +82,70 @@ def interface():
             valid_entry = True
         else:
             print("Invalid entry, please try again.\n")
-            
-    print(state_selected)
-     
-    #filter df by state selected  -------------------------------------------------- fix state header - downlad new dataset
-    
-    
-    
+                 
+    #filter df by state selected      
     covid_state_data = covid_data[covid_data['PROVINCE_STATE_CODE'] == state_selected]
-    #print(covid_state_data.head())
-   # death_count_data = covid_state_data[:,['PROVINCE_STATE_CODE', 'PEOPLE_DEATH_NEW_COUNT' ]]
-    #### debu ######
-    #death_count_data.to_csv('death by state.csv')    
-   # print(covid_state_data.shape)
-    ##############################
+    #sort by date
+    with pd.option_context('mode.chained_assignment', None):   # turns off SeetingWithCopyWarnning
+        covid_state_data.sort_values(by=['REPORT_DATE'], inplace=True)
+    #define axis values
+    report_dates = covid_state_data['REPORT_DATE'].tolist()
+    first_date_avail = report_dates[0]
+    last_date_avail = report_dates[-1]
     
-    covid_state_data.sort_values(by=['REPORT_DATE'], inplace=True)
-    x = covid_state_data['REPORT_DATE'].tolist()
-    #print(x)
+    # interface for selection of date range for report   
+    valid_entry = False
+    while valid_entry == False:
+        # inform user of available date range - optio 'all' is available to select all dates
+        date_entry =  input('''Enter desired date period for analysis in format:  m/d/yyyy-m/d/yyyy
+        current available date range is {} to {}. 
+        Entear [all] for all data or custom date range: '''.format(first_date_avail, last_date_avail))
+        
+        if date_entry.upper() == 'ALL':
+            requested_date_min = first_date_avail
+            requested_date_max = last_date_avail
+            valid_entry = True
+        else:
+            delimiter = date_entry.find('-') 
+            if delimiter!= -1:
+                # if either date is not found on date list then invalid entry
+                requested_date_min = date_entry[0:delimiter]
+                requested_date_max = date_entry[delimiter+1:]
+                
+                if ((requested_date_max not in report_dates) or (requested_date_min not in report_dates)):
+                    print("Invalid date format or date range entered. Please try again.") 
+                else:
+                    valid_entry = True
+            else:
+                print("Invalid date format or date range entered. Please try again.")
+        #debug
+        print (requested_date_min + "min") 
+        print (requested_date_max + "max")    
+        print (date_entry)
+    
+    #print (first_date_avail)   --- debug
+    #print (last_date_avail)    --- degbug
     y = covid_state_data['PEOPLE_DEATH_NEW_COUNT'].tolist()
-    print('Mean daily death count for time period {:.2}'.format(stats.mean(y)))
-    plt.scatter(x,y)
+    print('Daily Death Count Descriptive Statistics:')
+    print('All available dates: {}-{}'.format(first_date_avail, last_date_avail))
+    print('Mean   {:.4}'.format(float(stats.mean(y))))
+    print('Median {:.4}'.format(float(stats.median(y))))
+    print('Max    {:.4}'.format(float(max(y))))
+    print('Min    {:.4}'.format(float(min(y))))
+    
+    max_tick = int(covid_state_data.shape[0]/7)
+    
+    # figure plotting
+    plt.scatter(report_dates,y,s=10)
+   
+    ''' Draw trend line  https://www.dummies.com/programming/create-advanced-scatterplots-matplotlib/ '''
+    #z = np.polyfit(x, y, 1)
+    #p = np.poly1d(z)
+    #plt.plot(x, p(x), 'm-')
+        
     plt.xlabel ("Date")
+    plt.axes().xaxis.set_major_locator(plt.MaxNLocator(max_tick))
+    plt.xticks(rotation=90, fontsize=5)
     plt.ylabel ("Count")
     plt.title ("Covid-19 Daily Death Count\n " + states[state_selected])
     plt.show()
