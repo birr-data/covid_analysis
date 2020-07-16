@@ -10,6 +10,7 @@ Created on Wed Jul  8 20:40:42 2020
 import pandas as pd
 import numpy as np
 import seaborn as sns
+import statistics as  stats
 import matplotlib.pyplot as plt
 from dictionaries import states
 from funcs import sized_text
@@ -29,8 +30,11 @@ pd.options.display.max_rows = None
 covid_data = pd.read_csv('data/COVID Tracking - Historical.csv')
 policy_data = pd.read_csv('data/Policy - Univ of Washington.csv') 
 
+
+#covid_data.set_index("REPORT_DATE", inplace=True, drop=True)
 covid_data.drop('DATA_SOURCE_NAME',axis=1,inplace=True)
-#covid_data.set_index('state',inplace=True)
+covid_data.head()
+
 
 policy_data.drop(['GLOBAL_BURDEN_DISEASE_IDENTIFIER',
                  'PROVINCE_STATE_FIPS_NUMBER', 'PROVINCE_STATE_NAME'],
@@ -44,12 +48,12 @@ for i in range (0, len(policies_list)-1):
     #sized_text function for even column spacing        
     policies[i] = sized_text(policies_list[i])
     
-
-        
-
 def look():
+    '''debug function to look at data'''
+    print('covid number data')
     print(covid_data.head())
     print(covid_data.shape)
+    print('policy data')
     print(policy_data.head())
     print(policy_data.shape)        
          
@@ -85,14 +89,29 @@ def interface():
             print("Invalid entry, please try again.\n")
             
     print(state_selected)
-      
-    covid_state_data = covid_data.loc[covid_data['state'] == state_selected]
-   
-    covid_state_data.to_csv('filtered by state.csv')    
-   
-    print(covid_state_data.shape)
+     
+    #filter df by state selected  -------------------------------------------------- fix state header - downlad new dataset
     
     
+    
+    covid_state_data = covid_data[covid_data['PROVINCE_STATE_CODE'] == state_selected]
+    #print(covid_state_data.head())
+   # death_count_data = covid_state_data[:,['PROVINCE_STATE_CODE', 'PEOPLE_DEATH_NEW_COUNT' ]]
+    #### debu ######
+    #death_count_data.to_csv('death by state.csv')    
+   # print(covid_state_data.shape)
+    ##############################
+    
+    covid_state_data.sort_values(by=['REPORT_DATE'], inplace=True)
+    x = covid_state_data['REPORT_DATE'].tolist()
+    #print(x)
+    y = covid_state_data['PEOPLE_DEATH_NEW_COUNT'].tolist()
+    print('Mean daily death count for time period {:.2}'.format(stats.mean(y)))
+    plt.scatter(x,y)
+    plt.xlabel ("Date")
+    plt.ylabel ("Count")
+    plt.title ("Covid-19 Daily Death Count\n " + states[state_selected])
+    plt.show()
     
     row_count = int((len(policies)/3)) #diplay 3 columns
     for r in range(0, row_count + 1):
