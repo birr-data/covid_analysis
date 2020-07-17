@@ -9,21 +9,20 @@ Created on Wed Jul  8 20:40:42 2020
 
 import pandas as pd
 import numpy as np
-
 import seaborn as sns
 import statistics as  stats
 import matplotlib.pyplot as plt
 from dictionaries import states
+from funcs import flip_date
 from funcs import sized_text
 from datetime import datetime
-
 
 #global vars
 policies_list = []
 policies = {}
 
-program_run = True 
 
+program_run = True 
 
 # ----------------------------------------remove after debug
 pd.options.display.max_columns = None
@@ -90,23 +89,18 @@ def interface():
     covid_state_data = covid_data[covid_data['PROVINCE_STATE_CODE'] == state_selected]
     #sort by date
     with pd.option_context('mode.chained_assignment', None):   # turns off SeetingWithCopyWarnning
-        covid_state_data['REPORT_DATE_TYPE'] = covid_state_data['REPORT_DATE'].apply(lambda x : datetime.strptime(x, "%m/%d/%Y"))
-
-        #**********************************************************************************************************
-        
-        
-        
-        #******************************   Date sorting is broken
-        
-        
-        
-        #need to convert date values to date data type for proper sort
-        covid_state_data.sort_values(by=['REPORT_DATE'], inplace=True)
-        covid_state_data.to_csv('state sorted by date.csv')
+        #create column with date converted from string to datetime object to allow for proper sort
+        covid_state_data['REPORT_DATE_TYPE'] = covid_state_data['REPORT_DATE'].apply(lambda x : datetime.strptime(x, "%m/%d/%Y").date())
+        covid_state_data.sort_values(by=['REPORT_DATE_TYPE'], inplace=True)
+        #covid_state_data.to_csv('state sorted by date.csv')   -- debug
+    
     #define axis values
     report_dates = covid_state_data['REPORT_DATE'].tolist()
+    #print(report_dates)
+    #Get date range available in df
     first_date_avail = report_dates[0]
     last_date_avail = report_dates[-1]
+      
     requested_day_min = ""
     requested_day_max = ""
     # interface for selection of date range for report   
@@ -134,22 +128,32 @@ def interface():
             else:
                 print("Invalid date format or date range entered. Please try again.")
         #debug
-        print (requested_date_min + "min") 
-        print (requested_date_max + "max")    
-        print (date_entry)
+        #print ('{} min'.format(requested_date_min)) 
+        #print ('{} max'.format(requested_date_max))    
+        #print (date_entry)
+    
+                                                                     
+    covid_state_data_dated = covid_state_data[np.logical_and(covid_state_data['REPORT_DATE_TYPE'] >= 
+                             datetime.strptime(requested_date_min,"%m/%d/%Y").date(), covid_state_data['REPORT_DATE_TYPE'] <= 
+                             datetime.strptime(requested_date_max,"%m/%d/%Y").date())]
     
     
-    #**************************
-    covid_state_data_dated = covid_state_data[np.logical_and(covid_state_data['REPORT_DATE'] >= requested_date_min, covid_state_data['REPORT_DATE'] <= requested_date_max)]
-    covid_state_data_dated.to_csv('dated_file.csv')
+    ####debug
+    #covid_state_data_dated.to_csv('dated_file.csv')
     #print (covid_state_data.shape)
     #print (covid_state_data_dated.shape)    
-    
     #print (first_date_avail)   --- debug
     #print (last_date_avail)    --- degbug
-    y = covid_state_data_dated['PEOPLE_DEATH_NEW_COUNT'].tolist()
-    print(y)
-    print('Daily Death Count Descriptive Statistics:')
+    
+    #define plot axis y = date  x = count
+    y = covid_state_data_dated['PEOPLE_DEATH_COUNT'].tolist()
+    #apply flipdate to change date format from yyyy-mm-dd  to  mm/dd/yyyy
+    x = map(flip_date, np.array(covid_state_data_dated['REPORT_DATE_TYPE']))
+    x = list(x)
+    
+    # print (x)  -- debug
+    # print(y)   -- debug
+    print('Cumulative Death Count Descriptive Statistics:')
     print('All available dates: {}-{}'.format(first_date_avail, last_date_avail))
     print('Mean   {:.4}'.format(float(stats.mean(y))))
     print('Median {:.4}'.format(float(stats.median(y))))
@@ -159,8 +163,9 @@ def interface():
     max_tick = int(covid_state_data.shape[0]/7)
     
     # figure plotting
-    plt.scatter(report_dates,y,s=10)
-   
+    plt.scatter(x,y,s=10)
+    plt.plot(x,y)   
+    
     ''' Draw trend line  https://www.dummies.com/programming/create-advanced-scatterplots-matplotlib/ '''
     #z = np.polyfit(x, y, 1)
     #p = np.poly1d(z)
@@ -170,7 +175,15 @@ def interface():
     plt.axes().xaxis.set_major_locator(plt.MaxNLocator(max_tick))
     plt.xticks(rotation=90, fontsize=5)
     plt.ylabel ("Count")
-    plt.title ("Covid-19 Daily Death Count\n " + states[state_selected])
+    plt.title ("Covid-19 Cumulative Death Count\n " + states[state_selected])
+    plt.show()
+    
+    plt.plot(x,y)
+    plt.xlabel ("Date")
+    plt.axes().xaxis.set_major_locator(plt.MaxNLocator(max_tick))
+    plt.xticks(rotation=90, fontsize=5)
+    plt.ylabel ("Count")
+    plt.title ("Covid-19 Cumulative Death Count\n " + states[state_selected])
     plt.show()
     
     row_count = int((len(policies)/3)) #diplay 3 columns
