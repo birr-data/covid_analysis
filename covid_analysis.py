@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 from dictionaries import states
 from funcs import flip_date
 from funcs import sized_text
-from funcs import get_external_csv
+from funcs import get_data
 from datetime import datetime
 
 #global vars
@@ -213,7 +213,7 @@ def interface():
                
 
 while program_run:
-    get_external_csv()
+    get_data()
     interface()
     ext = input("Press any key to run another analysis, or [q]uit: ")
     if ext.lower() == "q":
