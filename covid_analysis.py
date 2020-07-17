@@ -9,11 +9,14 @@ Created on Wed Jul  8 20:40:42 2020
 
 import pandas as pd
 import numpy as np
+
 import seaborn as sns
 import statistics as  stats
 import matplotlib.pyplot as plt
 from dictionaries import states
 from funcs import sized_text
+from datetime import datetime
+
 
 #global vars
 policies_list = []
@@ -87,12 +90,25 @@ def interface():
     covid_state_data = covid_data[covid_data['PROVINCE_STATE_CODE'] == state_selected]
     #sort by date
     with pd.option_context('mode.chained_assignment', None):   # turns off SeetingWithCopyWarnning
+        covid_state_data['REPORT_DATE_TYPE'] = covid_state_data['REPORT_DATE'].apply(lambda x : datetime.strptime(x, "%m/%d/%Y"))
+
+        #**********************************************************************************************************
+        
+        
+        
+        #******************************   Date sorting is broken
+        
+        
+        
+        #need to convert date values to date data type for proper sort
         covid_state_data.sort_values(by=['REPORT_DATE'], inplace=True)
+        covid_state_data.to_csv('state sorted by date.csv')
     #define axis values
     report_dates = covid_state_data['REPORT_DATE'].tolist()
     first_date_avail = report_dates[0]
     last_date_avail = report_dates[-1]
-    
+    requested_day_min = ""
+    requested_day_max = ""
     # interface for selection of date range for report   
     valid_entry = False
     while valid_entry == False:
@@ -109,9 +125,8 @@ def interface():
             delimiter = date_entry.find('-') 
             if delimiter!= -1:
                 # if either date is not found on date list then invalid entry
-                requested_date_min = date_entry[0:delimiter]
                 requested_date_max = date_entry[delimiter+1:]
-                
+                requested_date_min = date_entry[0:delimiter]
                 if ((requested_date_max not in report_dates) or (requested_date_min not in report_dates)):
                     print("Invalid date format or date range entered. Please try again.") 
                 else:
@@ -123,9 +138,17 @@ def interface():
         print (requested_date_max + "max")    
         print (date_entry)
     
+    
+    #**************************
+    covid_state_data_dated = covid_state_data[np.logical_and(covid_state_data['REPORT_DATE'] >= requested_date_min, covid_state_data['REPORT_DATE'] <= requested_date_max)]
+    covid_state_data_dated.to_csv('dated_file.csv')
+    #print (covid_state_data.shape)
+    #print (covid_state_data_dated.shape)    
+    
     #print (first_date_avail)   --- debug
     #print (last_date_avail)    --- degbug
-    y = covid_state_data['PEOPLE_DEATH_NEW_COUNT'].tolist()
+    y = covid_state_data_dated['PEOPLE_DEATH_NEW_COUNT'].tolist()
+    print(y)
     print('Daily Death Count Descriptive Statistics:')
     print('All available dates: {}-{}'.format(first_date_avail, last_date_avail))
     print('Mean   {:.4}'.format(float(stats.mean(y))))
